@@ -1,0 +1,19 @@
+# Secrets
+.env
+
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+
+# Airflow
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Données volumineuses
+data/raw/*.csv

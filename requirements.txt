@@ -1,0 +1,16 @@
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn
+xgboost
+joblib
+jupyter
+ipykernel
+
+fastapi
+uvicorn
+requests
+
+psycopg[binary]
+python-dotenv
