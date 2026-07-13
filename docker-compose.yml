@@ -54,6 +54,20 @@ services:
       postgres:
         condition: service_healthy
 
+  streamlit:
+    build: .
+    container_name: fraud_streamlit
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    command: streamlit run streamlit/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   
   airflow-init:
     <<: *airflow-common

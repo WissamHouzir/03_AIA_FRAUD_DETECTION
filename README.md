@@ -28,6 +28,7 @@ Structure des dossiers :
 ├── database/      # Scripts SQL
 ├── models/        # Modèle ML sauvegardé
 ├── notebooks/     # Notebook d'entraînement du modèle
+├── streamlit/     # Rapport Streamlit
 ├── src/           # API FastAPI
 ├── Dockerfile
 ├── docker-compose.yml
@@ -102,7 +103,7 @@ Utilisateur : airflow
 Mot de passe : airflow
 ```
 
-Note : ce dossier ne contient pas encore de service Streamlit dans `docker-compose.yml`. Le lien Streamlit fonctionne seulement si une application Streamlit est ajoutée et lancée sur le port `8501`.
+Le rapport Streamlit affiche les indicateurs clés, les graphiques, les transactions les plus risquées et une table filtrable avec export CSV.
 
 ## Utiliser pgAdmin pour voir la table PostgreSQL
 

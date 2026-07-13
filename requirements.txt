@@ -14,3 +14,4 @@ requests
 
 psycopg[binary]
 python-dotenv
+streamlit
