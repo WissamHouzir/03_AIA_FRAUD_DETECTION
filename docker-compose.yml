@@ -73,25 +73,47 @@ services:
     <<: *airflow-common
     environment:
       <<: *airflow-common-env
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /tmp/airflow_simple_auth_passwords.json
       _AIRFLOW_DB_MIGRATE: "true"
       _AIRFLOW_WWW_USER_CREATE: "true"
       _AIRFLOW_WWW_USER_USERNAME: airflow
       _AIRFLOW_WWW_USER_PASSWORD: airflow
-    command: version
+    command: >
+      bash -c 'printf "{\"airflow\":\"airflow\"}\n" > /tmp/airflow_simple_auth_passwords.json
+      && airflow version'
 
   airflow-api-server:
     <<: *airflow-common
-    command: api-server
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /tmp/airflow_simple_auth_passwords.json
+    command: >
+      bash -c 'printf "{\"airflow\":\"airflow\"}\n" > /tmp/airflow_simple_auth_passwords.json
+      && airflow api-server'
     ports:
       - "8080:8080"
 
   airflow-scheduler:
     <<: *airflow-common
-    command: scheduler
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /tmp/airflow_simple_auth_passwords.json
+    command: >
+      bash -c 'printf "{\"airflow\":\"airflow\"}\n" > /tmp/airflow_simple_auth_passwords.json
+      && airflow scheduler'
 
   airflow-dag-processor:
     <<: *airflow-common
-    command: dag-processor
+    environment:
+      <<: *airflow-common-env
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_USERS: airflow:admin
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_PASSWORDS_FILE: /tmp/airflow_simple_auth_passwords.json
+    command: >
+      bash -c 'printf "{\"airflow\":\"airflow\"}\n" > /tmp/airflow_simple_auth_passwords.json
+      && airflow dag-processor'
 
 
 volumes:
