@@ -1,28 +1,33 @@
-# Détection de fraude en temps réel
+# Fraud Detection
 
-Pipeline permettant de récupérer des transactions en temps réel, d’estimer leur risque de fraude et d’enregistrer les résultats dans PostgreSQL.
+Projet de détection de fraude en temps réel.
 
-## Architecture
+L'objectif est de récupérer des transactions, prédire si elles sont frauduleuses avec un modèle ML, stocker les résultats dans PostgreSQL, puis automatiser la détection, les alertes et les rapports avec Airflow.
+
+## Architecture du projet
 
 ```text
-API Hugging Face → FastAPI + modèle ML → PostgreSQL
-                         ↑                    ↓
-                      Airflow        Alertes et rapport
+API transactions Hugging Face
+        |
+        v
+FastAPI + modèle ML
+        |
+        v
+PostgreSQL
+        |
+        v
+Airflow: détection, notification email, rapport quotidien
 ```
 
-- **FastAPI** récupère une transaction, applique le pipeline `model.joblib` et l’enregistre.
-- **PostgreSQL** stocke les transactions et les prédictions.
-- **Airflow** automatise la collecte, les alertes par e-mail et le rapport quotidien.
-- **Docker Compose** lance l’ensemble des services.
-
-## Structure du projet
+Structure des dossiers :
 
 ```text
-├── dags/          # Workflows Airflow
-├── data/raw/      # Données d’entraînement
-├── database/      # Création de la table et test de notification
-├── models/        # Pipeline ML sauvegardé
-├── notebooks/     # Entraînement et évaluation du modèle
+03_AIA_FRAUD_DETECTION/
+├── dags/          # DAGs Airflow
+├── data/raw/      # Données d'entraînement
+├── database/      # Scripts SQL
+├── models/        # Modèle ML sauvegardé
+├── notebooks/     # Notebook d'entraînement du modèle
 ├── src/           # API FastAPI
 ├── Dockerfile
 ├── docker-compose.yml
@@ -31,41 +36,166 @@ API Hugging Face → FastAPI + modèle ML → PostgreSQL
 
 ## Installation
 
-Prérequis : Docker et Docker Compose.
+Prérequis :
+
+- Docker
+- Docker Compose
+- pgAdmin, recommandé pour visualiser PostgreSQL facilement
+
+1. Aller dans le dossier du projet :
+
+```bash
+cd 03_AIA_FRAUD_DETECTION
+```
+
+2. Créer le fichier `.env` :
 
 ```bash
 cp .env.example .env
+```
+
+3. Compléter `.env` avec ces valeurs :
+
+```env
+POSTGRES_DB=fraud_detection
+POSTGRES_USER=fraud_user
+POSTGRES_PASSWORD=fraud_password
+DATABASE_URL=postgresql://fraud_user:fraud_password@postgres:5432/fraud_detection
+AIRFLOW_UID=50000
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=ton_adresse@gmail.com
+SMTP_PASSWORD=mot_de_passe_application
+ALERT_EMAIL=adresse_destinataire@gmail.com
+```
+
+Pour Gmail, il faut utiliser un mot de passe d'application, pas le mot de passe normal du compte.
+
+4. Lancer le projet :
+
+```bash
 docker compose up -d --build
 ```
 
-Compléter préalablement `.env` avec les accès PostgreSQL et SMTP. Pour Gmail, utiliser un mot de passe d’application.
+5. Créer la table PostgreSQL `transactions`.
 
-Lors de la première installation, créer la table `transactions` avec [create_transactions_table.sql](database/create_transactions_table.sql).
+Le script SQL se trouve ici :
 
-## Accès
+```text
+database/create_transactions_table.sql
+```
+
+Le plus simple est de l'exécuter avec pgAdmin, voir la section pgAdmin plus bas.
+
+## Liens utiles
 
 - Documentation FastAPI : <http://localhost:8000/docs>
-- Interface Airflow : <http://localhost:8080>
+- Airflow : <http://localhost:8080>
+- Streamlit : <http://localhost:8501>
 - PostgreSQL : `localhost:5432`
 
-L’utilisation de **pgAdmin** est recommandée pour consulter les transactions, exécuter les fichiers SQL et visualiser plus simplement la base PostgreSQL.
+Identifiants Airflow :
 
-## Workflows Airflow
+```text
+Utilisateur : airflow
+Mot de passe : airflow
+```
 
-1. `01_fraud_detection` : collecte et prédit une transaction chaque minute.
-2. `02_fraud_notification` : envoie un e-mail lorsqu’une fraude est détectée.
-3. `03_daily_fraud_report` : envoie chaque matin le rapport de la veille avec un CSV.
+Note : ce dossier ne contient pas encore de service Streamlit dans `docker-compose.yml`. Le lien Streamlit fonctionne seulement si une application Streamlit est ajoutée et lancée sur le port `8501`.
 
-## Test de notification
+## Utiliser pgAdmin pour voir la table PostgreSQL
 
-Exécuter [test_fraud_notification.sql](database/test_fraud_notification.sql) dans la base `fraud_detection`. Une transaction de test est créée et un e-mail doit être reçu sous une minute. La commande de nettoyage se trouve à la fin du fichier.
+Pour mieux visualiser la table PostgreSQL, il est recommandé d'utiliser pgAdmin.
+
+1. Ouvrir pgAdmin.
+
+2. Créer un nouveau serveur :
+
+- Clic droit sur `Servers`
+- `Register`
+- `Server`
+
+3. Dans l'onglet `General` :
+
+```text
+Name : Fraud Detection
+```
+
+4. Dans l'onglet `Connection` :
+
+```text
+Host name/address : localhost
+Port : 5432
+Maintenance database : fraud_detection
+Username : fraud_user
+Password : fraud_password
+```
+
+5. Cliquer sur `Save`.
+
+6. Créer la table `transactions` :
+
+- Ouvrir le serveur `Fraud Detection`
+- Aller dans `Databases`
+- Ouvrir la base `fraud_detection`
+- Clic droit sur la base
+- `Query Tool`
+- Copier le contenu de `database/create_transactions_table.sql`
+- Cliquer sur le bouton d'exécution
+
+7. Visualiser les transactions :
+
+- Aller dans `Schemas`
+- `public`
+- `Tables`
+- `transactions`
+- Clic droit sur `transactions`
+- `View/Edit Data`
+- `All Rows`
+
+## Airflow
+
+Airflow contient 3 DAGs :
+
+1. `01_fraud_detection` : récupère une transaction et fait une prédiction chaque minute.
+2. `02_fraud_notification` : envoie un email quand une fraude est détectée.
+3. `03_daily_fraud_report` : envoie chaque matin un rapport CSV des transactions de la veille.
+
+
+
+## Tester les notifications
+
+Pour tester une alerte email, exécuter le script SQL suivant dans pgAdmin :
+
+```text
+database/test_fraud_notification.sql
+```
+
+Si Airflow est lancé, le DAG de notification doit détecter la fraude et envoyer un email.
 
 ## Commandes utiles
 
+Arrêter les services :
+
 ```bash
-docker compose stop     # arrêter les services
-docker compose start    # les redémarrer
-docker compose logs -f  # consulter les journaux
+docker compose stop
 ```
 
-L’entraînement et l’évaluation du modèle sont disponibles dans le dossier `notebooks/`.
+Redémarrer les services :
+
+```bash
+docker compose start
+```
+
+Voir les logs :
+
+```bash
+docker compose logs -f
+```
+
+Arrêter et supprimer les conteneurs :
+
+```bash
+docker compose down
+```
