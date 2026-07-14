@@ -93,7 +93,7 @@ services:
       bash -c 'printf "{\"airflow\":\"airflow\"}\n" > /tmp/airflow_simple_auth_passwords.json
       && airflow api-server'
     ports:
-      - "8080:8080"
+      - "${AIRFLOW_PORT:-8081}:8080"
 
   airflow-scheduler:
     <<: *airflow-common

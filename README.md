@@ -92,7 +92,7 @@ Le plus simple est de l'exécuter avec pgAdmin, voir la section pgAdmin plus bas
 ## Liens utiles
 
 - Documentation FastAPI : <http://localhost:8000/docs>
-- Airflow : <http://localhost:8080>
+- Airflow : <http://localhost:8081>
 - Streamlit : <http://localhost:8501>
 - PostgreSQL : `localhost:5432`
 
